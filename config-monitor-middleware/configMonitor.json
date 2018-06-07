@@ -1,0 +1,8 @@
+{ 
+	"apiHost":"api.labsysash.inbcu.com",
+	"username":"onair",
+	"password":"nbcci",
+	"organization":"nbcci",
+	"space":"develop,SRA-Linear-Programmatic;qa,SRA-Linear-Programmatic-qa;"
+		
+}

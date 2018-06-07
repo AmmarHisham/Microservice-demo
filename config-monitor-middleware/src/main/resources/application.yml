@@ -1,0 +1,34 @@
+spring:
+  application:
+    name: config-monitor-middleware
+  mail:
+    host: ny09nbcge.nbc.com 
+    port: 25
+    username: 502077553
+    password: abcd
+
+security:
+  basic:
+    enabled: false
+management:
+  security:
+    enabled: false
+     
+refresh:
+  endPoint: /refresh
+  
+cf:
+  apiHost: ${vcap.services.Config_Monitor_Details.credentials.apiHost}
+  username: ${vcap.services.Config_Monitor_Details.credentials.username}
+  password: ${vcap.services.Config_Monitor_Details.credentials.password}
+  organization: ${vcap.services.Config_Monitor_Details.credentials.organization}
+  space: ${vcap.services.Config_Monitor_Details.credentials.space}
+  
+mail:
+  to: Mohammed.AmmarM@nbcuni.com
+  from: Mohammed.AmmarM@nbcuni.com
+  subject: Unable to refresh the config file changes 
+ 
+
+ 
+ 
