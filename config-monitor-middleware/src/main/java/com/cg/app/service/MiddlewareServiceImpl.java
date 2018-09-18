@@ -17,10 +17,18 @@ import org.cloudfoundry.reactor.uaa.ReactorUaaClient;
 import org.cloudfoundry.uaa.UaaClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 import com.cg.app.exception.RetryException;
+import com.cg.app.util.EmailUtil;
 
 @Service
 public class MiddlewareServiceImpl implements MiddlewareService {
@@ -52,6 +60,9 @@ public class MiddlewareServiceImpl implements MiddlewareService {
 	
 	@Value("${cf.apiHost}")
 	String API_HOST;
+	
+	@Autowired
+	private EmailUtil emailUtil;
 
 
 	CloudFoundryOperations cfops = null;
@@ -82,10 +93,29 @@ public class MiddlewareServiceImpl implements MiddlewareService {
 							  if (application.getName().equals(modifiedFileList.get(i).replaceAll(".yml",""))) { 
 								  applicationURLStr = application.getUrls().get(0);
 								  applicationURLStr = "http://" + applicationURLStr + REFRESH_END_POINT; 
-									  	Map<String, String>   params = new HashMap<>(); params.put("data", "Posting blank data");
-								  		logger.info("Started Posting the data to the URL "+applicationURLStr);
-								  		String response = restTemplate.postForObject(applicationURLStr, params, String.class);
-								  		logger.info("Application Properties changed : " + response); 
+
+								  HttpHeaders headers = new HttpHeaders();
+								  headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+								  MultiValueMap<String, String> map= new LinkedMultiValueMap<String, String>();
+								  map.add("data", "Posting blank data");
+
+								  try {
+								  
+								  HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<MultiValueMap<String, String>>(map, headers);
+								  ResponseEntity<String> response = restTemplate.postForEntity(applicationURLStr, request , String.class );
+								  
+								  System.out.println("Response status code : "+response.getStatusCode());
+								  System.out.println("Application Properties changed : "+response.getBody());
+								  
+								  if(!response.getStatusCode().equals(HttpStatus.OK)) {
+									 System.out.println("Failed to refresh the config changes for File : " + modifiedFileList.toString()+ " in the \\033"+branchName +" branch ");
+									 emailUtil.sendEmail("Failed to refresh the config changes for File : " + modifiedFileList.toString()+ " in the "+branchName +" branch ");
+								  }
+								  
+								  }catch(Exception e) {
+									  emailUtil.sendEmail("Failed to refresh the config changes for File : " + modifiedFileList.toString()+ " in the "+branchName +" branch "); 
+								  }
 							  }
 						  }
 				  });
